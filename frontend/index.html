@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Inkwell — Stories Worth Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --cream:#faf8f3;--cream2:#f0ece3;--cream3:#e4ddd0;
+  --ink:#1a1209;--ink2:#2d2416;--ink3:#4a3f30;
+  --text:#1a1209;--text2:#5a4f40;--text3:#9a8f80;
+  --accent:#d4520a;--accent2:#e8681f;--accent3:#f0845a;--accent-bg:rgba(212,82,10,0.08);
+  --white:#ffffff;--border:rgba(26,18,9,0.1);--border2:rgba(26,18,9,0.18);
+  --green:#2a7a45;--red:#c0392b;--blue:#1a5fb4;--purple:#7b3fa0;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.12);
+  --shadow-xl:0 24px 64px rgba(0,0,0,0.16);
+  --font-serif:'Playfair Display',Georgia,serif;
+  --font-sans:'DM Sans',system-ui,sans-serif;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+html{scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;}
+::selection{background:rgba(212,82,10,0.18);color:var(--accent);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--cream2);}
+::-webkit-scrollbar-thumb{background:var(--cream3);border-radius:99px;}
+::-webkit-scrollbar-thumb:hover{background:var(--accent3);}
+
+/* TOAST */
+#toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--cream);padding:12px 24px;border-radius:99px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all 0.4s var(--ease-spring);pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-lg);font-family:var(--font-sans);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.success{background:var(--green);}
+#toast.error{background:var(--red);}
+
+/* PAGE TRANSITIONS */
+.page-wrap{opacity:0;transform:translateY(16px);transition:opacity 0.5s var(--ease),transform 0.5s var(--ease);}
+.page-wrap.visible{opacity:1;transform:translateY(0);}
+
+/* ══════════════════════════════
+   AUTH PAGE — totally unique
+══════════════════════════════ */
+.auth-page{display:none;min-height:100vh;position:relative;overflow:hidden;background:var(--cream);}
+.auth-page.active{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
+/* Decorative background */
+.auth-deco{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.auth-deco-line{position:absolute;background:var(--cream3);opacity:0.5;}
+.auth-deco-line:nth-child(1){width:1px;height:100%;left:15%;}
+.auth-deco-line:nth-child(2){width:1px;height:100%;left:50%;}
+.auth-deco-line:nth-child(3){width:1px;height:100%;right:15%;}
+.auth-deco-line:nth-child(4){width:100%;height:1px;top:20%;}
+.auth-deco-line:nth-child(5){width:100%;height:1px;top:80%;}
+.auth-deco-circle{position:absolute;border-radius:50%;border:1px solid rgba(212,82,10,0.08);}
+.auth-deco-circle:nth-child(6){width:600px;height:600px;top:-200px;right:-200px;}
+.auth-deco-circle:nth-child(7){width:400px;height:400px;bottom:-150px;left:-150px;}
+
+/* Top masthead */
+.auth-masthead{position:relative;z-index:1;text-align:center;margin-bottom:48px;animation:slideDown 0.7s var(--ease-spring) both;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-24px)}to{opacity:1;transform:translateY(0)}}
+.auth-logo{display:inline-flex;align-items:center;gap:12px;text-decoration:none;margin-bottom:20px;}
+.auth-logo-mark{width:52px;height:52px;background:var(--accent);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 8px 24px rgba(212,82,10,0.3);transform:rotate(-3deg);}
+.auth-logo-text{font-family:var(--font-serif);font-size:32px;font-weight:700;color:var(--ink);letter-spacing:-0.5px;}
+.auth-tagline{font-size:15px;color:var(--text3);font-style:italic;font-family:var(--font-serif);}
+
+/* Auth card */
+.auth-card{position:relative;z-index:1;background:var(--white);border-radius:28px;padding:44px;width:100%;max-width:440px;box-shadow:var(--shadow-xl);border:1px solid var(--border);animation:scaleIn 0.6s var(--ease-spring) 0.1s both;}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+.auth-tabs{display:flex;background:var(--cream);border-radius:99px;padding:4px;margin-bottom:32px;gap:4px;}
+.auth-tab{flex:1;padding:10px 20px;border-radius:99px;border:none;background:none;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;transition:all 0.25s var(--ease);font-family:var(--font-sans);}
+.auth-tab.active{background:var(--white);color:var(--accent);box-shadow:var(--shadow-sm);}
+.auth-heading{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.auth-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-family:var(--font-sans);}
+.err-msg{background:rgba(192,57,43,0.06);border:1.5px solid rgba(192,57,43,0.2);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none;font-family:var(--font-sans);}
+
+/* Form fields — curved */
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-sans);}
+.field input,.field select,.field textarea{width:100%;background:var(--cream);border:2px solid transparent;border-radius:14px;padding:13px 18px;color:var(--text);font-size:14px;outline:none;transition:all 0.25s var(--ease);font-family:var(--font-sans);appearance:none;}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3);}
+.field input:focus,.field select:focus,.field textarea:focus{background:var(--white);border-color:var(--accent);box-shadow:0 0 0 4px rgba(212,82,10,0.1);}
+.field input:hover:not(:focus),.field select:hover:not(:focus){background:var(--cream2);border-color:var(--cream3);}
+.btn-auth{width:100%;background:var(--accent);color:#fff;border:none;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.3s var(--ease-spring);font-family:var(--font-sans);letter-spacing:0.01em;margin-top:4px;position:relative;overflow:hidden;}
+.btn-auth::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);pointer-events:none;}
+.btn-auth:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(212,82,10,0.35);}
+.btn-auth:active{transform:translateY(0);box-shadow:none;}
+
+/* Quotes strip at bottom */
+.auth-quote-strip{position:relative;z-index:1;text-align:center;margin-top:36px;animation:fadeUp 0.8s var(--ease) 0.4s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.auth-quote-strip q{font-family:var(--font-serif);font-size:15px;color:var(--text3);font-style:italic;}
+.auth-quote-strip cite{display:block;font-size:11px;color:var(--cream3);margin-top:6px;letter-spacing:0.1em;text-transform:uppercase;}
+
+/* ══════════════════════════════
+   NAVBAR
+══════════════════════════════ */
+.navbar{background:rgba(250,248,243,0.92);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}
+.nav-top{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;align-items:center;height:60px;gap:20px;}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;flex-shrink:0;}
+.nav-logo-mark{width:32px;height:32px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;transform:rotate(-3deg);transition:transform 0.3s var(--ease-spring);}
+.nav-logo:hover .nav-logo-mark{transform:rotate(3deg);}
+.nav-logo-text{font-family:var(--font-serif);font-size:20px;font-weight:700;color:var(--ink);}
+.nav-cats{display:flex;gap:2px;flex:1;overflow:hidden;}
+.nav-cat{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all 0.2s var(--ease);border:none;background:none;font-family:var(--font-sans);}
+.nav-cat:hover{background:var(--cream2);color:var(--text2);}
+.nav-cat.active{background:var(--accent);color:#fff;}
+.nav-search-wrap{position:relative;}
+.nav-search-wrap input{background:var(--cream2);border:2px solid transparent;border-radius:99px;padding:7px 16px 7px 36px;font-size:13px;width:200px;outline:none;transition:all 0.3s var(--ease);font-family:var(--font-sans);color:var(--text);}
+.nav-search-wrap input:focus{width:260px;background:var(--white);border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,82,10,0.1);}
+.nav-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+.nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.nav-write-btn{display:flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.25s var(--ease-spring);font-family:var(--font-sans);}
+.nav-write-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,82,10,0.3);}
+/* Profile */
+.profile-wrap{position:relative;}
+.profile-trigger{display:flex;align-items:center;gap:8px;padding:5px 14px 5px 5px;border-radius:99px;background:var(--cream2);border:2px solid transparent;cursor:pointer;transition:all 0.25s var(--ease);}
+.profile-trigger:hover{border-color:var(--accent);background:var(--white);}
+.p-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:14px;font-weight:700;flex-shrink:0;}
+.p-name{font-size:13px;font-weight:600;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.p-chevron{font-size:10px;color:var(--text3);transition:transform 0.2s;}
+.profile-wrap.open .p-chevron{transform:rotate(180deg);}
+.p-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:var(--white);border:1.5px solid var(--border2);border-radius:20px;padding:10px;width:230px;box-shadow:var(--shadow-lg);display:none;z-index:300;animation:dropFade 0.2s var(--ease);}
+@keyframes dropFade{from{opacity:0;transform:translateY(-8px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.profile-wrap.open .p-dropdown{display:block;}
+.p-dd-header{padding:12px 14px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.p-dd-name{font-family:var(--font-serif);font-size:16px;font-weight:700;color:var(--ink);}
+.p-dd-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.p-dd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;font-family:var(--font-sans);text-align:left;}
+.p-dd-item:hover{background:var(--cream);color:var(--text);}
+.p-dd-item.danger{color:var(--red);}
+.p-dd-item.danger:hover{background:rgba(192,57,43,0.06);}
+.p-dd-sep{height:1px;background:var(--border);margin:6px 0;}
+
+/* ══════════════════════════════
+   APP WRAPPER
+══════════════════════════════ */
+.app-shell{display:none;}
+.view{display:none;animation:viewIn 0.4s var(--ease) both;}
+@keyframes viewIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.view.active{display:block;}
+.container{max-width:1280px;margin:0 auto;padding:0 32px;}
+
+/* ══════════════════════════════
+   HOME — MAGAZINE LAYOUT
+══════════════════════════════ */
+/* Masthead strip */
+.mag-masthead{border-bottom:3px double var(--border2);padding:16px 0;margin-bottom:32px;}
+.mag-masthead-inner{display:flex;align-items:center;justify-content:space-between;}
+.mag-date{font-size:12px;color:var(--text3);font-family:var(--font-sans);letter-spacing:0.06em;text-transform:uppercase;}
+.mag-title{font-family:var(--font-serif);font-size:36px;font-weight:800;color:var(--ink);letter-spacing:-0.5px;text-align:center;}
+.mag-sub{font-size:12px;color:var(--text3);font-style:italic;font-family:var(--font-serif);text-align:right;}
+
+/* FEATURED POST */
+.featured-section{margin-bottom:48px;}
+.featured-card{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--white);border-radius:24px;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid var(--border);cursor:pointer;transition:all 0.35s var(--ease);}
+.featured-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-xl);}
+.featured-visual{background:linear-gradient(145deg,var(--cream2),var(--cream3));min-height:360px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.featured-visual::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,82,10,0.06),transparent);}
+.featured-emoji{font-size:120px;position:relative;z-index:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.1));animation:floatEmoji 6s ease-in-out infinite;}
+@keyframes floatEmoji{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+.featured-badge{position:absolute;top:20px;left:20px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:5px 14px;border-radius:99px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-sans);}
+.featured-body{padding:40px;display:flex;flex-direction:column;justify-content:center;}
+.feat-cat{display:inline-block;background:var(--accent-bg);color:var(--accent);font-size:10px;font-weight:800;padding:4px 12px;border-radius:99px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-sans);}
+.feat-title{font-family:var(--font-serif);font-size:30px;font-weight:800;color:var(--ink);line-height:1.25;margin-bottom:14px;letter-spacing:-0.3px;}
+.feat-excerpt{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:24px;display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.feat-author{display:flex;align-items:center;gap:10px;}
+.feat-avatar{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:14px;font-weight:700;}
+.feat-author-name{font-size:13px;font-weight:700;color:var(--text);}
+.feat-author-meta{font-size:12px;color:var(--text3);}
+.feat-read-btn{margin-top:24px;display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--cream);border:none;padding:12px 24px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.25s var(--ease);font-family:var(--font-sans);align-self:flex-start;}
+.feat-read-btn:hover{background:var(--accent);transform:translateX(4px);}
+
+/* DIVIDER */
+.section-divider{display:flex;align-items:center;gap:16px;margin:40px 0 28px;}
+.section-divider-line{flex:1;height:1px;background:var(--border2);}
+.section-divider-title{font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--ink);white-space:nowrap;}
+.section-divider-count{font-size:12px;color:var(--text3);background:var(--cream2);padding:3px 12px;border-radius:99px;font-family:var(--font-sans);}
+
+/* MAGAZINE GRID */
+.mag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.mag-card{background:var(--white);border-radius:18px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:all 0.3s var(--ease);position:relative;}
+.mag-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);border-color:var(--cream3);}
+.mag-card-visual{height:160px;background:linear-gradient(145deg,var(--cream2),var(--cream3));display:flex;align-items:center;justify-content:center;font-size:56px;position:relative;overflow:hidden;transition:all 0.3s var(--ease);}
+.mag-card:hover .mag-card-visual{height:170px;}
+.mag-card-visual::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(0,0,0,0.04));}
+.theme-rust .mag-card-visual{background:linear-gradient(145deg,#fff3ee,#ffe5d8);}
+.theme-moss .mag-card-visual{background:linear-gradient(145deg,#eef7f0,#d8edd9);}
+.theme-slate .mag-card-visual{background:linear-gradient(145deg,#eef2f7,#d8e4f0);}
+.theme-plum .mag-card-visual{background:linear-gradient(145deg,#f5eef8,#e8d8f0);}
+.theme-gold .mag-card-visual{background:linear-gradient(145deg,#fdf8ee,#f5ecd0);}
+.mag-card-body{padding:20px;}
+.mag-card-cat{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;padding:3px 10px;border-radius:99px;margin-bottom:10px;font-family:var(--font-sans);}
+.cat-tech{background:rgba(26,95,180,0.1);color:var(--blue);}
+.cat-life{background:rgba(42,122,69,0.1);color:var(--green);}
+.cat-food{background:rgba(212,82,10,0.1);color:var(--accent);}
+.cat-travel{background:rgba(123,63,160,0.1);color:var(--purple);}
+.cat-general{background:var(--cream2);color:var(--text3);}
+.cat-health{background:rgba(192,57,43,0.1);color:var(--red);}
+.mag-card-title{font-family:var(--font-serif);font-size:17px;font-weight:700;color:var(--ink);line-height:1.35;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.mag-card-excerpt{font-size:13px;color:var(--text2);line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:16px;}
+.mag-card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);}
+.mag-author{display:flex;align-items:center;gap:8px;}
+.mag-author-av{width:26px;height:26px;border-radius:50%;background:var(--ink2);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-serif);}
+.mag-author-name{font-size:12px;font-weight:600;color:var(--text2);}
+.mag-meta{display:flex;align-items:center;gap:8px;}
+.mag-comments{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px;}
+.mag-date-label{font-size:11px;color:var(--text3);}
+.mag-card-actions{display:none;gap:6px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);}
+.mag-card.mine .mag-card-actions{display:flex;}
+.btn-edit-card{background:var(--cream);border:1.5px solid var(--border2);color:var(--text2);padding:5px 14px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all 0.2s;}
+.btn-edit-card:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);}
+.btn-del-card{background:rgba(192,57,43,0.06);border:1.5px solid rgba(192,57,43,0.15);color:var(--red);padding:5px 14px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all 0.2s;}
+.btn-del-card:hover{background:rgba(192,57,43,0.12);}
+
+/* ══════════════════════════════
+   SINGLE POST VIEW
+══════════════════════════════ */
+.post-view-layout{display:grid;grid-template-columns:1fr 300px;gap:48px;padding-top:40px;align-items:start;}
+.post-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;margin-bottom:28px;padding:8px 16px;border-radius:99px;border:1.5px solid var(--border2);transition:all 0.2s;background:var(--white);font-family:var(--font-sans);}
+.post-back:hover{border-color:var(--accent);color:var(--accent);}
+.post-hero{background:linear-gradient(145deg,var(--cream2),var(--cream3));border-radius:24px;padding:56px;text-align:center;margin-bottom:32px;position:relative;overflow:hidden;}
+.post-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,82,10,0.04),transparent);}
+.post-hero-emoji{font-size:96px;position:relative;z-index:1;display:block;margin-bottom:8px;}
+.post-cat-badge{display:inline-block;background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:4px 14px;border-radius:99px;text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-sans);}
+.post-article-title{font-family:var(--font-serif);font-size:38px;font-weight:800;color:var(--ink);line-height:1.18;margin:20px 0 16px;letter-spacing:-0.5px;}
+.post-article-meta{display:flex;align-items:center;gap:16px;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:32px;flex-wrap:wrap;}
+.art-author{display:flex;align-items:center;gap:10px;}
+.art-av{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:16px;font-weight:700;}
+.art-author-name{font-size:14px;font-weight:700;color:var(--text);}
+.art-date{font-size:13px;color:var(--text3);}
+.art-comments-count{font-size:13px;color:var(--text3);margin-left:auto;display:flex;align-items:center;gap:5px;}
+.post-article-body{font-family:var(--font-serif);font-size:18px;color:var(--text2);line-height:1.9;white-space:pre-wrap;letter-spacing:0.01em;}
+.post-article-body::first-letter{font-size:64px;font-weight:700;float:left;line-height:0.8;padding-right:8px;padding-top:8px;color:var(--accent);}
+.post-owner-actions{display:flex;gap:10px;margin-top:28px;padding-top:24px;border-top:1px dashed var(--border2);}
+.btn-edit-post{display:inline-flex;align-items:center;gap:6px;background:var(--cream2);border:1.5px solid var(--border2);color:var(--text2);padding:9px 20px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all 0.2s;}
+.btn-edit-post:hover{border-color:var(--accent);color:var(--accent);}
+.btn-del-post{display:inline-flex;align-items:center;gap:6px;background:rgba(192,57,43,0.06);border:1.5px solid rgba(192,57,43,0.15);color:var(--red);padding:9px 20px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all 0.2s;}
+.btn-del-post:hover{background:rgba(192,57,43,0.12);}
+
+/* COMMENTS */
+.comments-wrap{margin-top:48px;padding-top:40px;border-top:2px solid var(--border2);}
+.comments-heading{font-family:var(--font-serif);font-size:24px;font-weight:700;color:var(--ink);margin-bottom:24px;}
+.comment-form-wrap{background:var(--cream);border-radius:18px;padding:20px;margin-bottom:28px;}
+.comment-form-wrap textarea{width:100%;background:var(--white);border:2px solid transparent;border-radius:12px;padding:14px 18px;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:90px;font-family:var(--font-sans);transition:all 0.25s var(--ease);line-height:1.6;}
+.comment-form-wrap textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(212,82,10,0.1);}
+.comment-form-wrap textarea::placeholder{color:var(--text3);}
+.btn-post-comment{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;font-family:var(--font-sans);transition:all 0.25s var(--ease-spring);}
+.btn-post-comment:hover{background:var(--accent2);transform:translateY(-1px);}
+.comment-item{display:flex;gap:14px;margin-bottom:22px;animation:commentIn 0.4s var(--ease-spring) both;}
+@keyframes commentIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.c-avatar{width:38px;height:38px;border-radius:50%;background:var(--ink2);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:15px;font-weight:700;flex-shrink:0;}
+.c-bubble{flex:1;background:var(--white);border:1px solid var(--border);border-radius:18px;border-top-left-radius:4px;padding:16px 18px;}
+.c-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.c-name{font-size:13px;font-weight:700;color:var(--text);}
+.c-date{font-size:11px;color:var(--text3);}
+.c-text{font-size:14px;color:var(--text2);line-height:1.65;}
+.btn-del-c{background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;padding:2px 8px;border-radius:99px;transition:all 0.15s;font-family:var(--font-sans);}
+.btn-del-c:hover{color:var(--red);background:rgba(192,57,43,0.06);}
+
+/* POST SIDEBAR */
+.sidebar-widget{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:20px;}
+.sw-title{font-family:var(--font-serif);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.trending-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.15s;}
+.trending-item:last-child{border-bottom:none;}
+.trending-item:hover .ti-title{color:var(--accent);}
+.ti-num{font-family:var(--font-serif);font-size:24px;font-weight:800;color:var(--cream3);min-width:28px;line-height:1;}
+.ti-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;transition:color 0.15s;}
+.ti-author{font-size:11px;color:var(--text3);margin-top:3px;}
+
+/* ══════════════════════════════
+   WRITE / EDIT
+══════════════════════════════ */
+.write-view{max-width:780px;margin:0 auto;padding:40px 32px;}
+.write-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;margin-bottom:28px;padding:8px 16px;border-radius:99px;border:1.5px solid var(--border2);transition:all 0.2s;background:var(--white);font-family:var(--font-sans);}
+.write-back:hover{border-color:var(--accent);color:var(--accent);}
+.write-paper{background:var(--white);border-radius:24px;padding:48px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.write-paper-top{display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.write-emoji-picker{width:56px;height:56px;border-radius:14px;background:var(--cream);border:2px solid var(--border2);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.write-emoji-picker:hover{border-color:var(--accent);}
+.write-meta-inputs{display:flex;gap:10px;flex:1;}
+.write-meta-inputs select{flex:1;background:var(--cream);border:2px solid transparent;border-radius:12px;padding:10px 16px;font-size:13px;color:var(--text);outline:none;font-family:var(--font-sans);cursor:pointer;transition:all 0.2s;appearance:none;}
+.write-meta-inputs select:focus{background:var(--white);border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,82,10,0.1);}
+.write-title{width:100%;font-family:var(--font-serif);font-size:32px;font-weight:800;color:var(--ink);border:none;outline:none;background:none;margin-bottom:20px;line-height:1.2;resize:none;}
+.write-title::placeholder{color:var(--cream3);}
+.write-divider{height:2px;background:linear-gradient(to right,var(--accent),transparent);border-radius:99px;margin-bottom:24px;width:60px;}
+.write-body{width:100%;font-family:var(--font-serif);font-size:17px;color:var(--text2);border:none;outline:none;background:none;resize:none;min-height:320px;line-height:1.9;}
+.write-body::placeholder{color:var(--cream3);font-style:italic;}
+.write-footer{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:24px;border-top:1px solid var(--border);}
+.write-footer-left{font-size:12px;color:var(--text3);}
+.write-footer-right{display:flex;gap:10px;}
+.btn-cancel-write{background:var(--cream);border:1.5px solid var(--border2);color:var(--text2);padding:10px 22px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all 0.2s;}
+.btn-cancel-write:hover{border-color:var(--border2);background:var(--cream2);}
+.btn-publish{background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-sans);transition:all 0.3s var(--ease-spring);}
+.btn-publish:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,82,10,0.3);}
+
+/* ══════════════════════════════
+   PROFILE
+══════════════════════════════ */
+.profile-view{padding:40px 32px;max-width:1280px;margin:0 auto;}
+.profile-banner{background:linear-gradient(135deg,var(--ink) 0%,var(--ink2) 100%);border-radius:24px;padding:48px;margin-bottom:32px;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px;}
+.profile-banner::before{content:'';position:absolute;right:-80px;top:-80px;width:300px;height:300px;border-radius:50%;background:rgba(212,82,10,0.08);}
+.profile-banner::after{content:'';position:absolute;right:60px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(212,82,10,0.05);}
+.profile-big-av{width:88px;height:88px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:36px;font-weight:800;flex-shrink:0;border:4px solid rgba(255,255,255,0.15);position:relative;z-index:1;}
+.profile-banner-info{position:relative;z-index:1;}
+.profile-banner-name{font-family:var(--font-serif);font-size:30px;font-weight:800;color:var(--white);margin-bottom:4px;}
+.profile-banner-sub{font-size:13px;color:rgba(255,255,255,0.45);font-style:italic;font-family:var(--font-serif);}
+.profile-banner-stats{display:flex;gap:32px;margin-top:16px;}
+.pb-stat-num{font-family:var(--font-serif);font-size:24px;font-weight:800;color:var(--white);}
+.pb-stat-label{font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;}
+.profile-posts-heading{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:20px;}
+.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+
+/* ══════════════════════════════
+   EMPTY + MODAL
+══════════════════════════════ */
+.empty-state{text-align:center;padding:80px 24px;background:var(--white);border-radius:20px;border:1px solid var(--border);}
+.empty-emoji{font-size:64px;display:block;margin-bottom:20px;}
+.empty-title{font-family:var(--font-serif);font-size:24px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.empty-sub{font-size:14px;color:var(--text3);margin-bottom:24px;}
+.btn-empty-cta{background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:99px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-sans);transition:all 0.25s var(--ease-spring);}
+.btn-empty-cta:hover{background:var(--accent2);transform:translateY(-2px);}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,18,9,0.5);backdrop-filter:blur(6px);z-index:500;justify-content:center;align-items:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--white);border-radius:24px;padding:36px;width:100%;max-width:420px;box-shadow:var(--shadow-xl);animation:modalPop 0.3s var(--ease-spring);}
+@keyframes modalPop{from{opacity:0;transform:scale(0.9) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-box h3{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.modal-box p{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:24px;}
+.modal-btns{display:flex;gap:10px;}
+.btn-m-cancel{flex:1;background:var(--cream);border:1.5px solid var(--border2);padding:12px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;color:var(--text2);font-family:var(--font-sans);}
+.btn-m-confirm{flex:1;background:var(--red);color:#fff;border:none;padding:12px;border-radius:99px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-sans);transition:all 0.2s;}
+.btn-m-confirm:hover{background:#a93226;}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media(max-width:1024px){.mag-grid{grid-template-columns:repeat(2,1fr);}.post-view-layout{grid-template-columns:1fr;}.profile-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:768px){.auth-card{padding:28px;border-radius:20px;}.featured-card{grid-template-columns:1fr;}.featured-visual{min-height:200px;}.mag-grid{grid-template-columns:1fr;}.nav-cats{display:none;}.container{padding:0 16px;}.write-view{padding:20px 16px;}.write-paper{padding:24px;}.profile-view{padding:20px 16px;}.profile-grid{grid-template-columns:1fr;}.profile-banner{flex-direction:column;text-align:center;padding:32px;}.nav-top{padding:0 16px;}.post-back,.write-back{font-size:12px;}}
+@media(max-width:480px){.nav-search-wrap{display:none;}.auth-card{margin:16px;}.mag-masthead-inner{flex-direction:column;gap:4px;text-align:center;}.mag-title{font-size:26px;}}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ══ AUTH PAGE ══ -->
+<div class="auth-page" id="authPage">
+  <div class="auth-deco">
+    <div class="auth-deco-line"></div><div class="auth-deco-line"></div>
+    <div class="auth-deco-line"></div><div class="auth-deco-line"></div>
+    <div class="auth-deco-line"></div>
+    <div class="auth-deco-circle"></div><div class="auth-deco-circle"></div>
+  </div>
+  <div class="auth-masthead">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">✍</div>
+      <div class="auth-logo-text">Inkwell</div>
+    </div>
+    <div class="auth-tagline">"Where great ideas find their voice"</div>
+  </div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login',this)">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register',this)">Join Inkwell</button>
+    </div>
+    <div id="loginView">
+      <div class="auth-heading">Good to see you</div>
+      <div class="auth-sub">Sign in and continue your story</div>
+      <div class="err-msg" id="loginErr"></div>
+      <div class="field"><label>Email Address</label><input type="email" id="loginEmail" placeholder="your@email.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"/></div>
+      <button class="btn-auth" onclick="login()">Sign In →</button>
+    </div>
+    <div id="registerView" style="display:none">
+      <div class="auth-heading">Start your story</div>
+      <div class="auth-sub">Free forever. No credit card needed.</div>
+      <div class="err-msg" id="regErr"></div>
+      <div class="field"><label>Your Name</label><input type="text" id="regName" placeholder="Aman Raj"/></div>
+      <div class="field"><label>Email Address</label><input type="email" id="regEmail" placeholder="your@email.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"/></div>
+      <button class="btn-auth" onclick="register()">Create Account →</button>
+    </div>
+  </div>
+  <div class="auth-quote-strip">
+    <q>The first draft of anything is garbage.</q>
+    <cite>— Ernest Hemingway</cite>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div class="app-shell" id="appShell">
+  <nav class="navbar">
+    <div class="nav-top">
+      <div class="nav-logo" onclick="showView('home')">
+        <div class="nav-logo-mark">✍</div>
+        <div class="nav-logo-text">Inkwell</div>
+      </div>
+      <div class="nav-cats" id="navCats">
+        <button class="nav-cat active" onclick="filterCat('all',this)">All</button>
+      </div>
+      <div class="nav-search-wrap">
+        <span class="nav-search-icon">⌕</span>
+        <input type="text" placeholder="Search stories..." id="searchInput" oninput="filterPosts()"/>
+      </div>
+      <div class="nav-right">
+        <button class="nav-write-btn" onclick="showView('write')">✍ Write</button>
+        <div class="profile-wrap" id="profileWrap">
+          <div class="profile-trigger" onclick="toggleProfile()">
+            <div class="p-avatar" id="navAv">A</div>
+            <div class="p-name" id="navNm">User</div>
+            <div class="p-chevron">▾</div>
+          </div>
+          <div class="p-dropdown">
+            <div class="p-dd-header">
+              <div class="p-dd-name" id="ddName">User</div>
+              <div class="p-dd-sub">Inkwell Author</div>
+            </div>
+            <button class="p-dd-item" onclick="showView('home');closeProfile()">🏠 Home Feed</button>
+            <button class="p-dd-item" onclick="showView('write');closeProfile()">✍️ Write a Story</button>
+            <button class="p-dd-item" onclick="showView('profile');closeProfile()">👤 My Profile</button>
+            <div class="p-dd-sep"></div>
+            <button class="p-dd-item danger" onclick="logout()">↩ Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <div class="view active" id="homeView">
+    <div class="container">
+      <div class="mag-masthead">
+        <div class="mag-masthead-inner">
+          <div class="mag-date" id="todayDate"></div>
+          <div class="mag-title">Inkwell</div>
+          <div class="mag-sub">Stories Worth Reading</div>
+        </div>
+      </div>
+      <!-- FEATURED -->
+      <div class="featured-section" id="featuredSection"></div>
+      <!-- GRID -->
+      <div class="section-divider">
+        <div class="section-divider-line"></div>
+        <div class="section-divider-title">Latest Stories</div>
+        <div class="section-divider-count" id="postCountLabel">0 posts</div>
+        <div class="section-divider-line"></div>
+      </div>
+      <div class="mag-grid" id="magGrid"></div>
+    </div>
+  </div>
+
+  <!-- POST -->
+  <div class="view" id="postView">
+    <div class="container">
+      <div class="post-view-layout">
+        <div>
+          <button class="post-back" onclick="showView('home')">← Back to Feed</button>
+          <div id="postArticle"></div>
+          <div id="commentsArea"></div>
+        </div>
+        <div class="post-sidebar">
+          <div class="sidebar-widget" id="authorWidget"></div>
+          <div class="sidebar-widget">
+            <div class="sw-title">Trending Now</div>
+            <div id="trendingWidget"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WRITE -->
+  <div class="view" id="writeView">
+    <div class="write-view">
+      <button class="write-back" onclick="showView('home')">← Back</button>
+      <div class="write-paper">
+        <input type="hidden" id="editPostId"/>
+        <div class="write-paper-top">
+          <div class="write-emoji-picker" id="emojiDisplay" onclick="cycleEmoji()">📝</div>
+          <div class="write-meta-inputs">
+            <select id="writeCategory">
+              <option value="General">General</option>
+              <option value="Technology">Technology</option>
+              <option value="Life">Life</option>
+              <option value="Travel">Travel</option>
+              <option value="Food">Food</option>
+              <option value="Health">Health</option>
+              <option value="Finance">Finance</option>
+              <option value="Education">Education</option>
+            </select>
+          </div>
+        </div>
+        <textarea class="write-title" id="writeTitle" placeholder="Your story begins here..." rows="2" oninput="autoResize(this)"></textarea>
+        <div class="write-divider"></div>
+        <textarea class="write-body" id="writeBody" placeholder="Tell your story to the world..." oninput="autoResize(this)"></textarea>
+        <div class="write-footer">
+          <div class="write-footer-left" id="wordCount">0 words</div>
+          <div class="write-footer-right">
+            <button class="btn-cancel-write" onclick="showView('home')">Cancel</button>
+            <button class="btn-publish" id="publishBtn" onclick="publishPost()">Publish Story →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="view" id="profileView">
+    <div class="profile-view">
+      <div class="profile-banner">
+        <div class="profile-big-av" id="ppAv">A</div>
+        <div class="profile-banner-info">
+          <div class="profile-banner-name" id="ppName">User</div>
+          <div class="profile-banner-sub">Inkwell Author · Member since 2026</div>
+          <div class="profile-banner-stats">
+            <div><div class="pb-stat-num" id="ppPostCount">0</div><div class="pb-stat-label">Stories</div></div>
+            <div><div class="pb-stat-num" id="ppCommentCount">0</div><div class="pb-stat-label">Comments</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="profile-posts-heading">My Stories</div>
+      <div class="profile-grid" id="profileGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>Delete this story?</h3>
+    <p>This is permanent. The post and all its comments will be gone forever.</p>
+    <div class="modal-btns">
+      <button class="btn-m-cancel" onclick="closeModal('deleteModal')">Keep it</button>
+      <button class="btn-m-confirm" onclick="confirmDelete()">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='http://localhost:5000/api';
+let token=localStorage.getItem('token')||null;
+let userId=parseInt(localStorage.getItem('userId'))||null;
+let userName=localStorage.getItem('userName')||null;
+let allPosts=[];
+let deleteTargetId=null;
+let editMode=false;
+const EMOJIS=['📝','💻','🌍','🎨','🔥','💡','📸','🎵','🏃','🍕','✈️','📚','💰','🌱','🧠','🎭'];
+let emojiIdx=0;
+const THEMES=['theme-rust','theme-moss','theme-slate','theme-plum','theme-gold'];
+const CAT_CLASSES={Technology:'cat-tech',Life:'cat-life',Food:'cat-food',Travel:'cat-travel',Health:'cat-health',General:'cat-general',Finance:'cat-general',Education:'cat-moss'};
+
+// TOAST
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`show ${type}`;
+  setTimeout(()=>t.className='',3000);
+}
+
+// AUTH TABS
+function switchTab(tab,btn){
+  document.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('loginView').style.display=tab==='login'?'block':'none';
+  document.getElementById('registerView').style.display=tab==='register'?'block':'none';
+}
+
+// REGISTER
+async function register(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const password=document.getElementById('regPass').value;
+  if(!name||!email||!password){showErr('regErr','Please fill all fields');return;}
+  try{
+    const res=await fetch(`${API}/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});
+    const data=await res.json();
+    if(data.message==='Registered successfully'){
+      toast('Account created! Sign in now.','success');
+      switchTab('login',document.querySelectorAll('.auth-tab')[0]);
+    }else{showErr('regErr',data.message);}
+  }catch(e){showErr('regErr','Cannot connect to server.');}
+}
+
+// LOGIN
+async function login(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPass').value;
+  if(!email||!password){showErr('loginErr','Please fill all fields');return;}
+  try{
+    const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data=await res.json();
+    if(data.token){
+      token=data.token;userName=data.name;userId=data.id;
+      localStorage.setItem('token',token);
+      localStorage.setItem('userName',userName);
+      localStorage.setItem('userId',String(userId));
+      initApp();
+    }else{showErr('loginErr',data.message||'Login failed');}
+  }catch(e){showErr('loginErr','Cannot connect to server on port 5000.');}
+}
+
+// LOGOUT
+function logout(){
+  token=null;userName=null;userId=null;localStorage.clear();
+  document.getElementById('authPage').style.display='flex';
+  document.getElementById('authPage').classList.add('active');
+  document.getElementById('appShell').style.display='none';
+  closeProfile();toast('See you soon!');
+}
+
+// INIT
+function initApp(){
+  document.getElementById('authPage').style.display='none';
+  document.getElementById('authPage').classList.remove('active');
+  document.getElementById('appShell').style.display='block';
+  const av=(userName||'U')[0].toUpperCase();
+  document.getElementById('navAv').textContent=av;
+  document.getElementById('navNm').textContent=userName||'User';
+  document.getElementById('ddName').textContent=userName||'User';
+  document.getElementById('ppAv').textContent=av;
+  document.getElementById('ppName').textContent=userName||'User';
+  document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  loadPosts();showView('home');
+}
+
+// PROFILE DROPDOWN
+function toggleProfile(){document.getElementById('profileWrap').classList.toggle('open');}
+function closeProfile(){document.getElementById('profileWrap').classList.remove('open');}
+document.addEventListener('click',e=>{
+  const pw=document.getElementById('profileWrap');
+  if(pw&&!pw.contains(e.target))closeProfile();
+});
+
+// SHOW VIEW
+function showView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(view+'View').classList.add('active');
+  if(view==='home')loadPosts();
+  if(view==='profile')loadProfile();
+  if(view==='write'&&!editMode)resetWrite();
+  closeProfile();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// LOAD POSTS
+async function loadPosts(){
+  try{
+    const res=await fetch(`${API}/posts`);
+    allPosts=await res.json();
+    renderHome(allPosts);
+    buildNavCats();
+  }catch(e){
+    document.getElementById('magGrid').innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="empty-emoji">🔌</span><div class="empty-title">Server offline</div><div class="empty-sub">Start the backend with node index.js on port 5000</div></div>`;
+  }
+}
+
+function buildNavCats(){
+  const cats=[...new Set(allPosts.map(p=>p.category).filter(Boolean))];
+  const bar=document.getElementById('navCats');
+  bar.innerHTML=`<button class="nav-cat active" onclick="filterCat('all',this)">All</button>`;
+  cats.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='nav-cat';b.textContent=c;
+    b.onclick=function(){filterCat(c,this);};
+    bar.appendChild(b);
+  });
+}
+
+function filterCat(cat,btn){
+  document.querySelectorAll('.nav-cat').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered=cat==='all'?allPosts:allPosts.filter(p=>p.category===cat);
+  renderHome(filtered);
+}
+
+function filterPosts(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const filtered=allPosts.filter(p=>p.title.toLowerCase().includes(q)||(p.content||'').toLowerCase().includes(q));
+  renderHome(filtered);
+}
+
+function renderHome(posts){
+  document.getElementById('postCountLabel').textContent=`${posts.length} post${posts.length!==1?'s':''}`;
+  if(!posts.length){
+    document.getElementById('featuredSection').innerHTML='';
+    document.getElementById('magGrid').innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="empty-emoji">📭</span><div class="empty-title">No stories yet</div><div class="empty-sub">Be the first to share something!</div><button class="btn-empty-cta" onclick="showView('write')">Write a Story</button></div>`;
+    return;
+  }
+  // Featured
+  const feat=posts[0];
+  document.getElementById('featuredSection').innerHTML=`
+    <div class="featured-card" onclick="openPost(${feat.id})">
+      <div class="featured-visual">
+        <div class="featured-badge">✦ Featured</div>
+        <div class="featured-emoji">${feat.cover_emoji||'📝'}</div>
+      </div>
+      <div class="featured-body" onclick="event.stopPropagation()">
+        <div class="feat-cat">${feat.category||'General'}</div>
+        <div class="feat-title">${feat.title}</div>
+        <div class="feat-excerpt">${feat.content}</div>
+        <div class="feat-author">
+          <div class="feat-avatar">${(feat.author_name||'U')[0].toUpperCase()}</div>
+          <div class="feat-author-info">
+            <div class="feat-author-name">${feat.author_name||'Anonymous'}</div>
+            <div class="feat-author-meta">${formatDate(feat.created_at)} · ${feat.comment_count||0} comments</div>
+          </div>
+        </div>
+        <button class="feat-read-btn" onclick="openPost(${feat.id})">Read Story →</button>
+        ${feat.user_id==userId?`<div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-edit-card" onclick="event.stopPropagation();editPost(${feat.id},'${esc(feat.title)}','${esc(feat.content)}','${feat.category}','${feat.cover_emoji}')">✏️ Edit</button>
+          <button class="btn-del-card" onclick="event.stopPropagation();promptDelete(${feat.id})">🗑 Delete</button>
+        </div>`:''}
+      </div>
+    </div>`;
+  // Grid
+  const rest=posts.slice(1);
+  if(!rest.length){document.getElementById('magGrid').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3);font-family:var(--font-serif);font-style:italic">More stories coming soon...</div>`;return;}
+  document.getElementById('magGrid').innerHTML=rest.map((p,i)=>{
+    const theme=THEMES[i%THEMES.length];
+    const catCls=CAT_CLASSES[p.category]||'cat-general';
+    const mine=p.user_id==userId;
+    return `
+    <div class="mag-card ${theme} ${mine?'mine':''}" onclick="openPost(${p.id})">
+      <div class="mag-card-visual"><span style="font-size:56px">${p.cover_emoji||'📝'}</span></div>
+      <div class="mag-card-body">
+        <div class="mag-card-cat ${catCls}">${p.category||'General'}</div>
+        <div class="mag-card-title">${p.title}</div>
+        <div class="mag-card-excerpt">${p.content}</div>
+        <div class="mag-card-footer">
+          <div class="mag-author">
+            <div class="mag-author-av">${(p.author_name||'U')[0].toUpperCase()}</div>
+            <div class="mag-author-name">${p.author_name||'Anon'}</div>
+          </div>
+          <div class="mag-meta">
+            <div class="mag-comments">💬 ${p.comment_count||0}</div>
+            <div class="mag-date-label">${formatDate(p.created_at)}</div>
+          </div>
+        </div>
+        ${mine?`<div class="mag-card-actions">
+          <button class="btn-edit-card" onclick="event.stopPropagation();editPost(${p.id},'${esc(p.title)}','${esc(p.content)}','${p.category}','${p.cover_emoji}')">✏️ Edit</button>
+          <button class="btn-del-card" onclick="event.stopPropagation();promptDelete(${p.id})">🗑 Delete</button>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// OPEN POST
+async function openPost(id){
+  showView('post');
+  document.getElementById('postArticle').innerHTML=`<div style="padding:48px;text-align:center;color:var(--text3);font-family:var(--font-serif);font-style:italic">Loading story...</div>`;
+  try{
+    const [pr,cr]=await Promise.all([fetch(`${API}/posts/${id}`),fetch(`${API}/posts/${id}/comments`)]);
+    const post=await pr.json();const comments=await cr.json();
+    renderArticle(post);renderComments(comments,post);renderPostSidebar(post);
+  }catch(e){toast('Error loading post','error');}
+}
+
+function renderArticle(p){
+  document.getElementById('postArticle').innerHTML=`
+    <div class="post-hero">
+      <span class="post-hero-emoji">${p.cover_emoji||'📝'}</span>
+      <div class="post-cat-badge">${p.category||'General'}</div>
+    </div>
+    <div class="post-article-title">${p.title}</div>
+    <div class="post-article-meta">
+      <div class="art-author">
+        <div class="art-av">${(p.author_name||'U')[0].toUpperCase()}</div>
+        <div>
+          <div class="art-author-name">${p.author_name}</div>
+          <div class="art-date">${formatDate(p.created_at)}</div>
+        </div>
+      </div>
+      <div class="art-comments-count">💬 ${p.comment_count||0} comments</div>
+    </div>
+    <div class="post-article-body">${p.content}</div>
+    ${p.user_id==userId?`<div class="post-owner-actions">
+      <button class="btn-edit-post" onclick="editPost(${p.id},'${esc(p.title)}','${esc(p.content)}','${p.category}','${p.cover_emoji}')">✏️ Edit Story</button>
+      <button class="btn-del-post" onclick="promptDelete(${p.id})">🗑 Delete</button>
+    </div>`:''}`;
+}
+
+function renderComments(comments,post){
+  document.getElementById('commentsArea').innerHTML=`
+    <div class="comments-wrap">
+      <div class="comments-heading">💬 ${comments.length} Comment${comments.length!==1?'s':''}</div>
+      ${token?`<div class="comment-form-wrap">
+        <textarea id="cInput" placeholder="Share your thoughts on this story..."></textarea>
+        <button class="btn-post-comment" onclick="addComment(${post.id})">Post Comment</button>
+      </div>`:`<div style="background:var(--cream);border-radius:14px;padding:16px 20px;margin-bottom:24px;font-size:14px;color:var(--text2)">
+        <span style="color:var(--accent);cursor:pointer;font-weight:700" onclick="showAuth()">Sign in</span> to join the conversation
+      </div>`}
+      <div id="commentsList">
+        ${comments.length?comments.map((c,i)=>`
+          <div class="comment-item" style="animation-delay:${i*0.05}s">
+            <div class="c-avatar">${(c.author_name||'U')[0].toUpperCase()}</div>
+            <div class="c-bubble">
+              <div class="c-header">
+                <div class="c-name">${c.author_name}</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="c-date">${formatDate(c.created_at)}</div>
+                  ${c.user_id==userId?`<button class="btn-del-c" onclick="deleteComment(${c.id},${post.id})">✕ Remove</button>`:''}
+                </div>
+              </div>
+              <div class="c-text">${c.content}</div>
+            </div>
+          </div>`).join(''):`<div style="text-align:center;padding:40px;color:var(--text3);font-family:var(--font-serif);font-style:italic">No comments yet. Start the conversation!</div>`}
+      </div>
+    </div>`;
+}
+
+function renderPostSidebar(post){
+  document.getElementById('authorWidget').innerHTML=`
+    <div class="sw-title">About the Author</div>
+    <div style="text-align:center;padding:8px 0">
+      <div class="art-av" style="width:56px;height:56px;font-size:22px;margin:0 auto 12px">${(post.author_name||'U')[0].toUpperCase()}</div>
+      <div style="font-family:var(--font-serif);font-weight:700;font-size:17px;color:var(--ink)">${post.author_name}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;font-style:italic">Inkwell Author</div>
+    </div>`;
+  const top=allPosts.filter(p=>p.id!==post.id).slice(0,4);
+  document.getElementById('trendingWidget').innerHTML=top.length?top.map((p,i)=>`
+    <div class="trending-item" onclick="openPost(${p.id})">
+      <div class="ti-num">0${i+1}</div>
+      <div><div class="ti-title">${p.title}</div><div class="ti-author">by ${p.author_name}</div></div>
+    </div>`).join(''):`<div style="font-size:13px;color:var(--text3);padding:8px 0">No other posts yet</div>`;
+}
+
+// COMMENT
+async function addComment(postId){
+  const content=document.getElementById('cInput').value.trim();
+  if(!content){toast('Write something first','error');return;}
+  try{
+    const res=await fetch(`${API}/posts/${postId}/comments`,{method:'POST',headers:{'Content-Type':'application/json','authorization':`Bearer ${token}`},body:JSON.stringify({content})});
+    const data=await res.json();
+    if(data.message==='Comment added'){toast('Comment posted! 💬','success');openPost(postId);}
+    else toast(data.message,'error');
+  }catch(e){toast('Server error','error');}
+}
+async function deleteComment(cId,postId){
+  try{
+    await fetch(`${API}/comments/${cId}`,{method:'DELETE',headers:{'authorization':`Bearer ${token}`}});
+    toast('Comment removed');openPost(postId);
+  }catch(e){toast('Error','error');}
+}
+
+// WRITE
+const EMOJI_LIST=['📝','💻','🌍','🎨','🔥','💡','📸','🎵','🏃','🍕','✈️','📚','💰','🌱','🧠','🎭'];
+let emojiI=0;
+function cycleEmoji(){
+  emojiI=(emojiI+1)%EMOJI_LIST.length;
+  document.getElementById('emojiDisplay').textContent=EMOJI_LIST[emojiI];
+}
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+document.getElementById('writeBody').addEventListener('input',function(){
+  const words=this.value.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('wordCount').textContent=`${words} word${words!==1?'s':''}`;
+});
+function resetWrite(){
+  editMode=false;
+  document.getElementById('editPostId').value='';
+  document.getElementById('writeTitle').value='';
+  document.getElementById('writeBody').value='';
+  document.getElementById('writeCategory').value='General';
+  emojiI=0;document.getElementById('emojiDisplay').textContent='📝';
+  document.getElementById('publishBtn').textContent='Publish Story →';
+  document.getElementById('wordCount').textContent='0 words';
+}
+function editPost(id,title,content,category,emoji){
+  editMode=true;
+  document.getElementById('editPostId').value=id;
+  document.getElementById('writeTitle').value=title;
+  document.getElementById('writeBody').value=content;
+  document.getElementById('writeCategory').value=category;
+  const ei=EMOJI_LIST.indexOf(emoji);
+  emojiI=ei>=0?ei:0;
+  document.getElementById('emojiDisplay').textContent=emoji||'📝';
+  document.getElementById('publishBtn').textContent='Save Changes →';
+  showView('write');
+}
+async function publishPost(){
+  const title=document.getElementById('writeTitle').value.trim();
+  const content=document.getElementById('writeBody').value.trim();
+  const category=document.getElementById('writeCategory').value;
+  const cover_emoji=document.getElementById('emojiDisplay').textContent;
+  const editId=document.getElementById('editPostId').value;
+  if(!title||!content){toast('Title and content are required','error');return;}
+  try{
+    if(editId){
+      await fetch(`${API}/posts/${editId}`,{method:'PUT',headers:{'Content-Type':'application/json','authorization':`Bearer ${token}`},body:JSON.stringify({title,content,category,cover_emoji})});
+      toast('Story updated! ✅','success');
+    }else{
+      await fetch(`${API}/posts`,{method:'POST',headers:{'Content-Type':'application/json','authorization':`Bearer ${token}`},body:JSON.stringify({title,content,category,cover_emoji})});
+      toast('Story published! 🎉','success');
+    }
+    editMode=false;showView('home');
+  }catch(e){toast('Server error','error');}
+}
+
+// DELETE
+function promptDelete(id){deleteTargetId=id;document.getElementById('deleteModal').classList.add('open');}
+async function confirmDelete(){
+  if(!deleteTargetId)return;
+  try{
+    await fetch(`${API}/posts/${deleteTargetId}`,{method:'DELETE',headers:{'authorization':`Bearer ${token}`}});
+    toast('Story deleted');closeModal('deleteModal');deleteTargetId=null;showView('home');
+  }catch(e){toast('Error','error');}
+}
+
+// PROFILE
+async function loadProfile(){
+  try{
+    const res=await fetch(`${API}/users/${userId}/posts`,{headers:{'authorization':`Bearer ${token}`}});
+    const posts=await res.json();
+    document.getElementById('ppPostCount').textContent=posts.length;
+    document.getElementById('ppCommentCount').textContent='—';
+    const grid=document.getElementById('profileGrid');
+    if(!posts.length){
+      grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="empty-emoji">✍️</span><div class="empty-title">No stories yet</div><div class="empty-sub">Your published stories will appear here</div><button class="btn-empty-cta" onclick="showView('write')">Write Your First Story</button></div>`;
+      return;
+    }
+    grid.innerHTML=posts.map((p,i)=>{
+      const theme=THEMES[i%THEMES.length];
+      const catCls=CAT_CLASSES[p.category]||'cat-general';
+      return `
+      <div class="mag-card ${theme} mine" onclick="openPost(${p.id})">
+        <div class="mag-card-visual"><span style="font-size:56px">${p.cover_emoji||'📝'}</span></div>
+        <div class="mag-card-body">
+          <div class="mag-card-cat ${catCls}">${p.category||'General'}</div>
+          <div class="mag-card-title">${p.title}</div>
+          <div class="mag-card-excerpt">${p.content}</div>
+          <div class="mag-card-footer">
+            <div class="mag-comments">💬 ${p.comment_count||0}</div>
+            <div class="mag-date-label">${formatDate(p.created_at)}</div>
+          </div>
+          <div class="mag-card-actions">
+            <button class="btn-edit-card" onclick="event.stopPropagation();editPost(${p.id},'${esc(p.title)}','${esc(p.content)}','${p.category}','${p.cover_emoji}')">✏️ Edit</button>
+            <button class="btn-del-card" onclick="event.stopPropagation();promptDelete(${p.id})">🗑 Delete</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+// UTILS
+function formatDate(d){if(!d)return'';return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ').replace(/"/g,'&quot;');}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// BOOT
+if(token){initApp();}
+else{
+  document.getElementById('authPage').style.display='flex';
+  document.getElementById('authPage').classList.add('active');
+  document.getElementById('appShell').style.display='none';
+}
+</script>
+</body>
+</html>
